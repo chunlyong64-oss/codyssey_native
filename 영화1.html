@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영화 티어리스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: flex;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .left-section {
+            flex: 1;
+            min-width: 600px;
+        }
+
+        .right-section {
+            flex: 0 0 350px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-download {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-upload {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-upload:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn-clear {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .tier-container {
+            margin-bottom: 15px;
+        }
+
+        .tier-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        .tier-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.3em;
+        }
+
+        .tier-s { background: #ff6b6b; }
+        .tier-a { background: #ffa94d; }
+        .tier-b { background: #ffd43b; }
+        .tier-c { background: #51cf66; }
+        .tier-d { background: #74c0fc; }
+
+        .tier-drop-zone {
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+            transition: all 0.3s;
+        }
+
+        .tier-drop-zone.drag-over {
+            background: #e3f2fd;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .movie-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .movie-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .movie-item.dragging {
+            opacity: 0.5;
+        }
+
+        .movie-info {
+            flex: 1;
+        }
+
+        .movie-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .movie-meta {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .btn-delete {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background: #e53e3e;
+        }
+
+        .movie-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .movie-pool-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 0 1 calc(50% - 5px);
+        }
+
+        .movie-pool-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .movie-pool-item.dragging {
+            opacity: 0.5;
+        }
+
+        .pool-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .pool-meta {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .pool-delete {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+            align-self: flex-start;
+            transition: all 0.3s;
+        }
+
+        .pool-delete:hover {
+            background: #e53e3e;
+        }
+
+        .pool-drop-zone {
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 150px;
+            transition: all 0.3s;
+        }
+
+        .pool-drop-zone.drag-over {
+            background: #fff3cd;
+            border-color: #ed8936;
+            box-shadow: 0 0 10px rgba(237, 137, 54, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 30px 15px;
+            font-style: italic;
+        }
+
+        @media (max-width: 1200px) {
+            .content {
+                flex-direction: column;
+            }
+
+            .left-section {
+                min-width: auto;
+            }
+
+            .right-section {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 영화 티어리스트</h1>
+            <p>본 영화들을 순위대로 정렬해보세요</p>
+        </div>
+
+        <div class="content">
+            <!-- 왼쪽: 티어 섹션 -->
+            <div class="left-section">
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-s">S</div>
+                        <span>최고 (S Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="S">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-a">A</div>
+                        <span>매우 좋음 (A Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="A">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-b">B</div>
+                        <span>좋음 (B Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="B">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-c">C</div>
+                        <span>보통 (C Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="C">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-d">D</div>
+                        <span>별로 (D Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="D">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 입력 및 관리 섹션 -->
+            <div class="right-section">
+                <div class="section-title">영화 추가</div>
+
+                <div class="input-group">
+                    <label for="movieTitle">영화 제목</label>
+                    <input type="text" id="movieTitle" placeholder="예: 쇼생크 탈출">
+                </div>
+
+                <div class="input-group">
+                    <label for="movieYear">개봉 연도</label>
+                    <input type="number" id="movieYear" placeholder="예: 1994" min="1900" max="2099">
+                </div>
+
+                <div class="input-group">
+                    <label for="movieDirector">감독</label>
+                    <input type="text" id="movieDirector" placeholder="예: 프랭크 다라본트">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-add" onclick="addMovie()">추가</button>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+                <div class="section-title">영화 목록</div>
+                <div class="pool-drop-zone" id="moviePool">
+                    <div class="empty-message">추가된 영화가 없습니다</div>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+                <div class="section-title">파일 관리</div>
+                <div class="button-group">
+                    <button class="btn-download" onclick="downloadList()">다운로드</button>
+                </div>
+
+                <div class="button-group">
+                    <div class="file-input-wrapper">
+                        <button class="btn-upload">업로드</button>
+                        <input type="file" id="fileInput" accept=".json" onchange="uploadList(event)">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-clear" onclick="clearAll()">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 데이터 저장소
+        let movies = {
+            pool: [],
+            S: [],
+            A: [],
+            B: [],
+            C: [],
+            D: []
+        };
+
+        const STORAGE_KEY = 'movieTierList';
+
+        // 초기화
+        function init() { <!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영화 티어리스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: flex;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .left-section {
+            flex: 1;
+            min-width: 600px;
+        }
+
+        .right-section {
+            flex: 0 0 350px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-download {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-upload {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-upload:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn-clear {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .tier-container {
+            margin-bottom: 15px;
+        }
+
+        .tier-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        .tier-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.3em;
+        }
+
+        .tier-s { background: #ff6b6b; }
+        .tier-a { background: #ffa94d; }
+        .tier-b { background: #ffd43b; }
+        .tier-c { background: #51cf66; }
+        .tier-d { background: #74c0fc; }
+
+        .tier-drop-zone {
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+            transition: all 0.3s;
+        }
+
+        .tier-drop-zone.drag-over {
+            background: #e3f2fd;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .movie-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .movie-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .movie-item.dragging {
+            opacity: 0.5;
+        }
+
+        .movie-info {
+            flex: 1;
+        }
+
+        .movie-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .movie-meta {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .btn-delete {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background: #e53e3e;
+        }
+
+        .movie-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .movie-pool-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 0 1 calc(50% - 5px);
+        }
+
+        .movie-pool-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .movie-pool-item.dragging {
+            opacity: 0.5;
+        }
+
+        .pool-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .pool-meta {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .pool-delete {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+            align-self: flex-start;
+            transition: all 0.3s;
+        }
+
+        .pool-delete:hover {
+            background: #e53e3e;
+        }
+
+        .pool-drop-zone {
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 150px;
+            transition: all 0.3s;
+        }
+
+        .pool-drop-zone.drag-over {
+            background: #fff3cd;
+            border-color: #ed8936;
+            box-shadow: 0 0 10px rgba(237, 137, 54, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 30px 15px;
+            font-style: italic;
+        }
+
+        @media (max-width: 1200px) {
+            .content {
+                flex-direction: column;
+            }
+
+            .left-section {
+                min-width: auto;
+            }
+
+            .right-section {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 영화 티어리스트</h1>
+            <p>본 영화들을 순위대로 정렬해보세요</p>
+        </div>
+
+        <div class="content">
+            <!-- 왼쪽: 티어 섹션 -->
+            <div class="left-section">
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-s">S</div>
+                        <span>최고 (S Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="S">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-a">A</div>
+                        <span>매우 좋음 (A Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="A">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-b">B</div>
+                        <span>좋음 (B Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="B">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-c">C</div>
+                        <span>보통 (C Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="C">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-d">D</div>
+                        <span>별로 (D Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="D">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 입력 및 관리 섹션 -->
+            <div class="right-section">
+                <div class="section-title">영화 추가</div>
+
+                <div class="input-group">
+                    <label for="movieTitle">영화 제목</label>
+                    <input type="text" id="movieTitle" placeholder="예: 쇼생크 탈출">
+                </div>
+
+                <div class="input-group">
+                    <label for="movieYear">개봉 연도</label>
+                    <input type="number" id="movieYear" placeholder="예: 1994" min="1900" max="2099">
+                </div>
+
+                <div class="input-group">
+                    <label for="movieDirector">감독</label>
+                    <input type="text" id="movieDirector" placeholder="예: 프랭크 다라본트">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-add" onclick="addMovie()">추가</button>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+                <div class="section-title">영화 목록</div>
+                <div class="pool-drop-zone" id="moviePool">
+                    <div class="empty-message">추가된 영화가 없습니다</div>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+                <div class="section-title">파일 관리</div>
+                <div class="button-group">
+                    <button class="btn-download" onclick="downloadList()">다운로드</button>
+                </div>
+
+                <div class="button-group">
+                    <div class="file-input-wrapper">
+                        <button class="btn-upload">업로드</button>
+                        <input type="file" id="fileInput" accept=".json" onchange="uploadList(event)">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-clear" onclick="clearAll()">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 데이터 저장소
+        let movies = {
+            pool: [],
+            S: [],
+            A: [],
+            B: [],
+            C: [],
+            D: []
+        };
+
+        const STORAGE_KEY = 'movieTierList';
+
+        // 초기화
+        function init() { 파일이 아직 모두 출력이 되질 않았는데 추가로 출력 부탁해         // 초기화
+        function init() {
+            loadFromStorage();
+            renderMovies();
+        }
+
+        // localStorage에서 데이터 로드
+        function loadFromStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    movies = JSON.parse(saved);
+                } catch (e) {
+                    console.error('데이터 로드 실패:', e);
+                }
+            }
+        }
+
+        // localStorage에 데이터 저장
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
+        }
+
+        // 영화 추가
+        function addMovie() {
+            const title = document.getElementById('movieTitle').value.trim();
+            const year = document.getElementById('movieYear').value.trim();
+            const director = document.getElementById('movieDirector').value.trim();
+
+            if (!title) {
+                alert('영화 제목을 입력해주세요');
+                return;
+            }
+
+            if (!year) {
+                alert('개봉 연도를 입력해주세요');
+                return;
+            }
+
+            if (!director) {
+                alert('감독을 입력해주세요');
+                return;
+            }
+
+            const movie = {
+                id: Date.now(),
+                title: title,
+                year: parseInt(year),
+                director: director
+            };
+
+            movies.pool.push(movie);
+            saveToStorage();
+            renderMovies();
+
+            // 입력 필드 초기화
+            document.getElementById('movieTitle').value = '';
+            document.getElementById('movieYear').value = '';
+            document.getElementById('movieDirector').value = '';
+            document.getElementById('movieTitle').focus();
+        }
+
+        // 영화 삭제
+        function deleteMovie(id) {
+            for (let tier in movies) {
+                movies[tier] = movies[tier].filter(m => m.id !== id);
+            }
+            saveToStorage();
+            renderMovies();
+        }
+
+        // 모든 화면 렌더링
+        function renderMovies() {
+            renderPool();
+            renderTiers();
+        }
+
+        // 영화 목록 렌더링
+        function renderPool() {
+            const pool = document.getElementById('moviePool');
+            
+            if (movies.pool.length === 0) {
+                pool.innerHTML = '<div class="empty-message">추가된 영화가 없습니다</div>';
+                return;
+            }
+
+            pool.innerHTML = movies.pool.map(movie => `
+                <div class="movie-pool-item" draggable="true" data-id="${movie.id}">
+                    <div class="pool-title">${movie.title}</div>
+                    <div class="pool-meta">${movie.year} • ${movie.director}</div>
+                    <button class="pool-delete" onclick="deleteMovie(${movie.id})">삭제</button>
+                </div>
+            `).join('');
+
+            // 드래그 이벤트 추가
+            document.querySelectorAll('.movie-pool-item').forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        // 티어 렌더링
+        function renderTiers() {
+            const tiers = ['S', 'A', 'B', 'C', 'D'];
+            
+            tiers.forEach(tier => {
+                const zone = document.querySelector(`[data-tier="${tier}"]`);
+                
+                if (movies[tier].length === 0) {
+                    zone.innerHTML = '<div class="empty-message">여기에 영화를 드래그하세요</div>';
+                    return;
+                }
+
+                zone.innerHTML = movies[tier].map(movie => `
+                    <div class="movie-item" draggable="true" data-id="${movie.id}" data-tier="${tier}">
+                        <div class="movie-info">
+                            <div class="movie-title">${movie.title}</div>
+                            <div class="movie-meta">${movie.year} • ${movie.director}</div>
+                        </div>
+                        <button class="btn-delete" onclick="deleteMovie(${movie.id})">삭제</button>
+                    </div>
+                `).join('');
+
+                // 드래그 이벤트 추가
+                zone.querySelectorAll('.movie-item').forEach(item => {
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragend', handleDragEnd);
+                });
+            });
+
+            // 드롭 존 이벤트 추가
+            document.querySelectorAll('.tier-drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+        }
+
+        let draggedElement = null;
+
+        // 드래그 시작
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        // 드래그 종료
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+        }
+
+        // 드래그 오버
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        }
+
+        // 드래그 리브
+        function handleDragLeave(e) {
+            if (e.target === this) {
+                this.classList.remove('drag-over');
+            }
+        }
+
+        // 드롭
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            if (!draggedElement) return;
+
+            const movieId = parseInt(draggedElement.dataset.id);
+            const targetTier = this.dataset.tier;
+            const sourceTier = draggedElement.dataset.tier;
+
+            // 같은 티어에서 드롭된 경우
+            if (sourceTier === targetTier) {
+                renderMovies();
+                return;
+            }
+
+            // 영화 찾기
+            let movie = null;
+            
+            if (sourceTier) {
+                // 티어에서 드래그
+                movie = movies[sourceTier].find(m => m.id === movieId);
+                if (movie) {
+                    movies[sourceTier] = movies[sourceTier].filter(m => m.id !== movieId);
+                }
+            } else {
+                // 풀에서 드래그
+                movie = movies.pool.find(m => m.id === movieId);
+                if (movie) {
+                    movies.pool = movies.pool.filter(m => m.id !== movieId);
+                }
+            }
+
+            // 목표 티어에 추가
+            if (movie) {
+                movies[targetTier].push(movie);
+                saveToStorage();
+                renderMovies();
+            }
+        }
+
+        // 파일 다운로드
+        function downloadList() {
+            const data = {
+                title: '영화 티어리스트',
+                exportDate: new Date().toLocaleString('ko-KR'),
+                movies: movies
+            };
+
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `영화티어리스트_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // 파일 업로드
+        function uploadList(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.movies) {
+                        movies = data.movies;
+                        saveToStorage();
+                        renderMovies();
+                        alert('영화 목록을 불러왔습니다!');
+                    } else {
+                        alert('올바른 형식의 파일이 아닙니다');
+                    }
+                } catch (error) {
+                    alert('파일을 읽을 수 없습니다: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+
+            // 파일 입력 초기화
+            event.target.value = '';
+        }
+
+        // 전체 초기화
+        function clearAll() {
+            if (confirm('정말로 모든 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                movies = {
+                    pool: [],
+                    S: [],
+                    A: [],
+                    B: [],
+                    C: [],
+                    D: []
+                };
+                localStorage.removeItem(STORAGE_KEY);
+                renderMovies();
+                alert('모든 데이터가 삭제되었습니다');
+            }
+        }
+
+        // Enter 키로 영화 추가
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            document.getElementById('movieTitle').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addMovie();
+            });
+            document.getElementById('movieYear').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addMovie();
+            });
+            document.getElementById('movieDirector').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addMovie();
+            });
+        });
+    </script>
+</body>
+</html> 죄송합니다! 계속 이어서 JavaScript 코드를 제공하겠습니다.
+
+```javascript
+        // 초기화
+        function init() {
+            loadFromStorage();
+            renderMovies();
+        }
+
+        // localStorage에서 데이터 로드
+        function loadFromStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    movies = JSON.parse(saved);
+                } catch (e) {
+                    console.error('데이터 로드 실패:', e);
+                }
+            }
+        }
+
+        // localStorage에 데이터 저장
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
+        }
+
+        // 영화 추가
+        function addMovie() {
+            const title = document.getElementById('movieTitle').value.trim();
+            const year = document.getElementById('movieYear').value.trim();
+            const director = document.getElementById('movieDirector').value.trim();
+
+            if (!title) {
+                alert('영화 제목을 입력해주세요');
+                return;
+            }
+
+            if (!year) {
+                alert('개봉 연도를 입력해주세요');
+                return;
+            }
+
+            if (!director) {
+                alert('감독을 입력해주세요');
+                return;
+            }
+
+            const movie = {
+                id: Date.now(),
+                title: title,
+                year: parseInt(year),
+                director: director
+            };
+
+            movies.pool.push(movie);
+            saveToStorage();
+            renderMovies();
+
+            // 입력 필드 초기화
+            document.getElementById('movieTitle').value = '';
+            document.getElementById('movieYear').value = '';
+            document.getElementById('movieDirector').value = '';
+            document.getElementById('movieTitle').focus();
+        }
+
+        // 영화 삭제
+        function deleteMovie(id) {
+            for (let tier in movies) {
+                movies[tier] = movies[tier].filter(m => m.id !== id);
+            }
+            saveToStorage();
+            renderMovies();
+        }
+
+        // 모든 화면 렌더링
+        function renderMovies() {
+            renderPool();
+            renderTiers();
+        }
+
+        // 영화 목록 렌더링
+        function renderPool() {
+            const pool = document.getElementById('moviePool');
+            
+            if (movies.pool.length === 0) {
+                pool.innerHTML = '<div class="empty-message">추가된 영화가 없습니다</div>';
+                return;
+            }
+
+            pool.innerHTML = movies.pool.map(movie => `
+                <div class="movie-pool-item" draggable="true" data-id="${movie.id}">
+                    <div class="pool-title">${movie.title}</div>
+                    <div class="pool-meta">${movie.year} • ${movie.director}</div>
+                    <button class="pool-delete" onclick="deleteMovie(${movie.id})">삭제</button>
+                </div>
+            `).join('');
+
+            // 드래그 이벤트 추가
+            document.querySelectorAll('.movie-pool-item').forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        // 티어 렌더링
+        function renderTiers() {
+            const tiers = ['S', 'A', 'B', 'C', 'D'];
+            
+            tiers.forEach(tier => {
+                const zone = document.querySelector(`[data-tier="${tier}"]`);
+                
+                if (movies[tier].length === 0) {
+                    zone.innerHTML = '<div class="empty-message">여기에 영화를 드래그하세요</div>';
+                    return;
+                }
+
+                zone.innerHTML = movies[tier].map(movie => `
+                    <div class="movie-item" draggable="true" data-id="${movie.id}" data-tier="${tier}">
+                        <div class="movie-info">
+                            <div class="movie-title">${movie.title}</div>
+                            <div class="movie-meta">${movie.year} • ${movie.director}</div>
+                        </div>
+                        <button class="btn-delete" onclick="deleteMovie(${movie.id})">삭제</button>
+                    </div>
+                `).join('');
+
+                // 드래그 이벤트 추가
+                zone.querySelectorAll('.movie-item').forEach(item => {
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragend', handleDragEnd);
+                });
+            });
+
+            // 드롭 존 이벤트 추가
+            document.querySelectorAll('.tier-drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+        }
+
+        let draggedElement = null;
+
+        // 드래그 시작
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        // 드래그 종료
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+        }
+
+        // 드래그 오버
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        }
+
+        // 드래그 리브
+        function handleDragLeave(e) {
+            if (e.target === this) {
+                this.classList.remove('drag-over');
+            }
+        }
+
+        // 드롭
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            if (!draggedElement) return;
+
+            const movieId = parseInt(draggedElement.dataset.id);
+            const targetTier = this.dataset.tier;
+            const sourceTier = draggedElement.dataset.tier;
+
+            // 같은 티어에서 드롭된 경우
+            if (sourceTier === targetTier) {
+                renderMovies();
+                return;
+            }
+
+            // 영화 찾기
+            let movie = null;
+            
+            if (sourceTier) {
+                // 티어에서 드래그
+                movie = movies[sourceTier].find(m => m.id === movieId);
+                if (movie) {
+                    movies[sourceTier] = movies[sourceTier].filter(m => m.id !== movieId);
+                }
+            } else {
+                // 풀에서 드래그
+                movie = movies.pool.find(m => m.id === movieId);
+                if (movie) {
+                    movies.pool = movies.pool.filter(m => m.id !== movieId);
+                }
+            }
+
+            // 목표 티어에 추가
+            if (movie) {
+                movies[targetTier].push(movie);
+                saveToStorage();
+                renderMovies();
+            }
+        }
+
+        // 파일 다운로드
+        function downloadList() {
+            const data = {
+                title: '영화 티어리스트',
+                exportDate: new Date().toLocaleString('ko-KR'),
+                movies: movies
+            };
+
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `영화티어리스트_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // 파일 업로드
+        function uploadList(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.movies) {
+                        movies = data.movies;
+                        saveToStorage();
+                        renderMovies();
+                        alert('영화 목록을 불러왔습니다!');
+                    } else {
+                        alert('올바른 형식의 파일이 아닙니다');
+                    }
+                } catch (error) {
+                    alert('파일을 읽을 수 없습니다: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+
+            // 파일 입력 초기화
+            event.target.value = '';
+        }
+
+        // 전체 초기화
+        function clearAll() {
+            if (confirm('정말로 모든 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                movies = {
+                    pool: [],
+                    S: [],
+                    A: [],
+                    B: [],
+                    C: [],
+                    D: []
+                };
+                localStorage.removeItem(STORAGE_KEY);
+                renderMovies();
+                alert('모든 데이터가 삭제되었습니다');
+            }
+        }
+
+        // Enter 키로 영화 추가
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            document.getElementById('movieTitle').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addMovie();
+            });
+            document.getElementById('movieYear').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addMovie();
+            });
+            document.getElementById('movieDirector').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addMovie();
+            });
+        });
+    </script>
+</body>
+</html>
+```
+
+---
+
+## ✅ 완성된 HTML 파일입니다!
+
+**이 파일의 기능:**
+1. ✅ 영화 제목, 연도, 감독 입력
+2. ✅ S~D 5단계 티어 분류
+3. ✅ 드래그앤드롭으로 영화 이동
+4. ✅ localStorage에 자동 저장
+5. ✅ JSON 파일로 다운로드 (친구와 공유)
+6. ✅ JSON 파일 업로드 (친구 파일 불러오기)
+7. ✅ 한국어 UI
+8. ✅ 외부 의존성 없음 (순수 HTML/CSS/JS)
+
+**사용 방법:**
+- 파일을 `.html`로 저장하고 브라우저에서 열기
+- 영화 정보 입력 → 추가 → 드래그해서 티어 배치
+- 다운로드 버튼으로 JSON 파일 저장
+- 업로드 버튼으로 친구 파일 불러오기
+
+혹시 오류가 있거나 추가 기능이 필요하면 말씀해주세요! 🎬 파일이 오류가 있다는데 어느 부분을 수정하면 되는지 알려줘 // ❌ 잘못된 부분 (줄 약 220-221)
+function init() {
+// 초기화
+function init() {
+    loadFromStorage();
+    renderMovies();
+}         const STORAGE_KEY = 'movieTierList';
+
+        // 초기화
+        function init() {
+            loadFromStorage();
+            renderMovies();
+        }
+
+        // localStorage에서 데이터 로드
+        function loadFromStorage() { 
