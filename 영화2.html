@@ -1,0 +1,303 @@
+제시해주신 내용을 바탕으로 기획서를 업데이트하고, 이를 구현한 단일 HTML 파일을 생성했습니다.
+
+### 🛠️ 구현 특징
+1.  **로그인 및 저장**: 실제 서버가 없으므로 브라우저의 `localStorage`를 활용해 사용자 이름을 입력받고(로그인), 해당 이름으로 티어리스트 상태를 저장하고 불러올 수 있도록 구현했습니다.
+2.  **드래그 앤 드롭**: HTML5 표준 Drag and Drop API를 사용하여 영화 카드를 각 티어 영역으로 자유롭게 옮길 수 있습니다.
+3.  **이미지**: 직접 준비하신 이미지를 넣으실 수 있도록 기본 구조를 잡았으며, 현재는 테스트를 위해 샘플 이미지가 나오도록 설정했습니다.
+
+먼저 기획서를 파일로 저장하고, 이어서 웹페이지 코드를 생성하겠습니다.
+
+요청하신 대로 **기획서(`기획서.md`)**와 모든 기능이 포함된 **HTML 파일**을 준비했습니다.
+
+아래 코드를 복사하여 메모장에 붙여넣고 `index.html` 또는 `movie.html`이라는 이름으로 저장한 뒤 브라우저로 열어보세요!
+
+### 1. 기획서 (기획서.md)
+위 파이썬 실행 결과에 포함된 내용과 동일하며, 프로젝트의 방향성을 담고 있습니다.
+
+### 2. 영화 티어리스트 웹페이지 코드 (`movie_tier_list.html`)
+
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 영화 티어리스트</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-color: #2d2d2d;
+            --text-color: #ffffff;
+            --accent-color: #e50914;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-login { background-color: var(--accent-color); color: white; }
+        .btn-save { background-color: #2ecc71; color: white; }
+        button:hover { opacity: 0.8; }
+
+        /* 티어 테이블 스타일 */
+        .tier-container {
+            width: 100%;
+            max-width: 1000px;
+            border: 2px solid #444;
+            margin-bottom: 30px;
+            background-color: #000;
+        }
+
+        .tier-row {
+            display: flex;
+            min-height: 120px;
+            border-bottom: 1px solid #444;
+        }
+
+        .tier-label {
+            width: 120px;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #000;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .tier-dropzone {
+            flex-grow: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        /* 티어별 색상 */
+        .tier-life { background-color: #ff7f7f; } /* 인생 영화 */
+        .tier-good { background-color: #ffbf7f; } /* 추천함 */
+        .tier-soso { background-color: #ffff7f; } /* 보통 */
+        .tier-bad  { background-color: #7f7f7f; } /* 보지 마 */
+
+        /* 영화 아이템 스타일 */
+        .movie-pool {
+            width: 100%;
+            max-width: 1000px;
+            background-color: var(--card-color);
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 150px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            border: 2px dashed #555;
+        }
+
+        .movie-card {
+            width: 100px;
+            height: 150px;
+            background-color: #444;
+            border-radius: 4px;
+            cursor: grab;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none; /* 드래그 시 이미지 간섭 방지 */
+        }
+
+        .movie-card:active { cursor: grabbing; }
+
+        .movie-title {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.8);
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 4px 0;
+            color: white;
+        }
+
+        .drag-over {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎬 영화 티어리스트</h1>
+        <div class="user-section">
+            <span id="user-display">로그인이 필요합니다</span>
+            <button class="btn-login" onclick="login()">로그인</button>
+            <button class="btn-save" onclick="saveData()">리스트 저장</button>
+        </div>
+    </header>
+
+    <div class="tier-container">
+        <div class="tier-row">
+            <div class="tier-label tier-life">인생 영화</div>
+            <div class="tier-dropzone" id="tier-life" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+        </div>
+        <div class="tier-row">
+            <div class="tier-label tier-good">추천함</div>
+            <div class="tier-dropzone" id="tier-good" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+        </div>
+        <div class="tier-row">
+            <div class="tier-label tier-soso">보통</div>
+            <div class="tier-dropzone" id="tier-soso" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+        </div>
+        <div class="tier-row">
+            <div class="tier-label tier-bad">보지 마</div>
+            <div class="tier-dropzone" id="tier-bad" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+        </div>
+    </div>
+
+    <h3>🎥 영화 보관함 (드래그해서 옮기세요)</h3>
+    <div class="movie-pool" id="movie-pool" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+        <!-- 영화 카드 예시 (이미지 경로를 직접 수정하세요) -->
+        <div class="movie-card" id="movie-1" draggable="true" ondragstart="drag(event)">
+            <img src="https://picsum.photos/seed/m1/100/150" alt="영화1">
+            <div class="movie-title">기생충</div>
+        </div>
+        <div class="movie-card" id="movie-2" draggable="true" ondragstart="drag(event)">
+            <img src="https://picsum.photos/seed/m2/100/150" alt="영화2">
+            <div class="movie-title">올드보이</div>
+        </div>
+        <div class="movie-card" id="movie-3" draggable="true" ondragstart="drag(event)">
+            <img src="https://picsum.photos/seed/m3/100/150" alt="영화3">
+            <div class="movie-title">괴물</div>
+        </div>
+        <div class="movie-card" id="movie-4" draggable="true" ondragstart="drag(event)">
+            <img src="https://picsum.photos/seed/m4/100/150" alt="영화4">
+            <div class="movie-title">헤어질 결심</div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = "";
+
+        // 1. 드래그 앤 드롭 기능
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            ev.currentTarget.classList.remove('drag-over');
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drag-over');
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+            
+            let target = ev.target;
+            // 드롭 영역(dropzone 또는 pool)을 찾을 때까지 상위 요소 탐색
+            while (target && !target.classList.contains('tier-dropzone') && !target.classList.contains('movie-pool')) {
+                target = target.parentElement;
+            }
+            
+            if (target) {
+                target.appendChild(draggedElement);
+            }
+        }
+
+        // 2. 로그인 시뮬레이션
+        function login() {
+            const name = prompt("사용자 이름을 입력하세요 (예: 홍길동):");
+            if (name && name.trim() !== "") {
+                currentUser = name.trim();
+                document.getElementById('user-display').innerText = `👤 ${currentUser}님의 리스트`;
+                loadData();
+            }
+        }
+
+        // 3. 데이터 저장 (localStorage 활용)
+        function saveData() {
+            if (!currentUser) {
+                alert("로그인을 먼저 해주세요!");
+                login();
+                return;
+            }
+
+            const zones = ['tier-life', 'tier-good', 'tier-soso', 'tier-bad', 'movie-pool'];
+            const state = {};
+
+            zones.forEach(zoneId => {
+                const zone = document.getElementById(zoneId);
+                state[zoneId] = Array.from(zone.children).map(card => card.id);
+            });
+
+            localStorage.setItem(`movieTier_${currentUser}`, JSON.stringify(state));
+            alert(`${currentUser}님의 리스트가 브라우저에 저장되었습니다!`);
+        }
+
+        // 4. 데이터 불러오기
+        function loadData() {
+            const savedData = localStorage.getItem(`movieTier_${currentUser}`);
+            if (!savedData) return;
+
+            const state = JSON.parse(savedData);
+            Object.keys(state).forEach(zoneId => {
+                const zone = document.getElementById(zoneId);
+                state[zoneId].forEach(cardId => {
+                    const card = document.getElementById(cardId);
+                    if (card) zone.appendChild(card);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
+```
+
+### 💡 사용 팁:
+*   **이미지 교체**: `<img src="...">` 부분의 주소를 컴퓨터에 있는 이미지 경로(예: `images/poster1.jpg`)로 바꾸면 직접 준비하신 이미지가 나옵니다.
+*   **로그인**: 서버가 없어도 브라우저가 이름을 기억합니다. '홍길동'으로 저장하고 새로고침한 뒤 다시 '홍길동'으로 로그인하면 배치했던 리스트가 그대로 나타납니다.
+
+멋진 프로젝트의 시작을 응원합니다! 더 수정하고 싶은 부분이 생기면 언제든 말씀해 주세요. :) 
